@@ -1,9 +1,11 @@
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
+import debounce from 'lodash.debounce';
 
 const input = document.querySelector('input');
-const searchSubmit = document.querySelector('.search-form');
+const formSubmit = document.querySelector('.search-form');
+const searchBtn = document.querySelector('.search');
 const gallery = document.querySelector('.gallery');
 const loadMore = document.querySelector('.load-more');
 const bottom = document.querySelector('.bottom');
@@ -18,10 +20,19 @@ function onImageClick(event) {
 }
 
 const slideShow = new SimpleLightbox('.gallery a');
-console.log(slideShow.elements);
+// console.log(slideShow.elements);
 
-searchSubmit.addEventListener('submit', onSearchSubmit);
-function onSearchSubmit(event) {
+document.addEventListener('wheel', debounce(scrollHandler, 300));
+function scrollHandler(event) {
+  if (event.deltaY > 0) {
+    windowAutoScroll();
+  }
+
+  console.log(event.deltaY);
+}
+
+formSubmit.addEventListener('submit', onFormSubmit);
+function onFormSubmit(event) {
   event.preventDefault();
 
   page = 1;
@@ -30,12 +41,15 @@ function onSearchSubmit(event) {
 
   fetchImages(input.value)
     .then(photos => {
-      Notiflix.Notify.success(`Hooray! We found ${photos.total} images.`);
+      Notiflix.Notify.success(`Hooray! We found ${photos.totalHits} images.`);
       renderGallery(photos);
+      searchBtn.blur();
+      loadMore.blur();
       loadMore.classList.remove('is-hidden', 'is-disabled');
       loadMore.disabled = false;
       bottom.classList.remove('is-hidden');
       slideShow.refresh();
+      //   windowAutoScroll();
     })
     .catch(() => {
       gallery.innerHTML = '';
@@ -58,10 +72,9 @@ function onLoadMoreClick() {
       }
       renderGallery(photos);
       slideShow.refresh();
+      //   windowAutoScroll();
     })
     .catch(() => {
-      //   loadMore.classList.add('is-hidden');
-      //   bottom.classList.add('is-hidden');
       loadMore.disabled = true;
       loadMore.classList.add('is-disabled');
       Notiflix.Notify.info(
@@ -86,7 +99,7 @@ async function fetchImages(request) {
 }
 
 function renderGallery(photos) {
-  //   console.log(photos);
+  console.log(photos);
   let markUp = '';
   let size = '';
 
@@ -121,4 +134,16 @@ function renderGallery(photos) {
   });
 
   gallery.insertAdjacentHTML('beforeend', markUp);
+}
+
+function windowAutoScroll() {
+  //   console.log(document.querySelector('.gallery').firstElementChild);
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 3,
+    behavior: 'smooth',
+  });
 }
