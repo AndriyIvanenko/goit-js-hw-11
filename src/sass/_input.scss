@@ -3,5 +3,33 @@
     justify-content: center;
     padding-top: 10px;
     padding-bottom: 10px;
-    background-color: blue;
+    background-color:dodgerblue;
+    position: sticky;
+}
+input {
+    border: none;
+    border-bottom-left-radius: 3px;
+    border-top-left-radius: 3px;
+    outline: none;
+    height: 30px;
+    padding-left: 5px; 
+}
+
+button {
+    display: flex;
+    align-items: center;
+    border: none;
+    border-bottom-right-radius: 3px;
+    border-top-right-radius: 3px;
+    outline: none;
+    color: #808080;
+}
+button:hover {
+    cursor: pointer;
+    color: darkslategray;
+    background-color: lightgrey;
+}
+button:focus {
+    color:darkslategray;
+    background-color:lightgrey;
 }
