@@ -6,6 +6,7 @@ const input = document.querySelector('input');
 const searchSubmit = document.querySelector('.search-form');
 const gallery = document.querySelector('.gallery');
 const loadMore = document.querySelector('.load-more');
+const bottom = document.querySelector('.bottom');
 const imagesPerPage = 40;
 let page;
 let loadedImages = 0;
@@ -15,6 +16,9 @@ gallery.addEventListener('click', onImageClick);
 function onImageClick(event) {
   event.preventDefault();
 }
+
+const slideShow = new SimpleLightbox('.gallery a');
+console.log(slideShow.elements);
 
 searchSubmit.addEventListener('submit', onSearchSubmit);
 function onSearchSubmit(event) {
@@ -28,7 +32,10 @@ function onSearchSubmit(event) {
     .then(photos => {
       Notiflix.Notify.success(`Hooray! We found ${photos.total} images.`);
       renderGallery(photos);
-      loadMore.classList.remove('is-hidden');
+      loadMore.classList.remove('is-hidden', 'is-disabled');
+      loadMore.disabled = false;
+      bottom.classList.remove('is-hidden');
+      slideShow.refresh();
     })
     .catch(() => {
       gallery.innerHTML = '';
@@ -50,17 +57,18 @@ function onLoadMoreClick() {
         throw new Error();
       }
       renderGallery(photos);
+      slideShow.refresh();
     })
     .catch(() => {
-      loadMore.classList.add('is-hidden');
+      //   loadMore.classList.add('is-hidden');
+      //   bottom.classList.add('is-hidden');
+      loadMore.disabled = true;
+      loadMore.classList.add('is-disabled');
       Notiflix.Notify.info(
         "We're sorry, but you've reached the end of search results."
       );
     });
 }
-
-new SimpleLightbox('.gallery a');
-// slideShow.on('show.simplelightbox', function () {});
 
 async function fetchImages(request) {
   return fetch(
@@ -93,7 +101,7 @@ function renderGallery(photos) {
       <div class="photo-card">
         <div class="photo-thumb">
             <img src="${photo.webformatURL}" alt="${photo.tags}" loading="lazy" style="${size}:100%"/>
-        </div>       
+        </div>
         <div class="info">
             <p class="info-item">
                 <b>Likes</b>${photo.likes}
