@@ -3,14 +3,19 @@ import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 // import debounce from 'lodash.debounce';
 
+import { fetchImages } from './js/fetchImages';
+import { renderGallery } from './js/markupGallery';
+import { galleryAutoScroll } from './js/scrollWindow';
+
 const input = document.querySelector('input');
 const formSubmit = document.querySelector('.search-form');
 const searchBtn = document.querySelector('.search');
-const gallery = document.querySelector('.gallery');
 const loadMore = document.querySelector('.load-more');
 const bottom = document.querySelector('.bottom');
+const gallery = document.querySelector('.gallery');
+
 const imagesPerPage = 40;
-let page;
+let page = 1;
 let loadedImages = 0;
 let totalImages = 0;
 let request = '';
@@ -36,8 +41,8 @@ function onMouseScroll(event) {
   }
 }
 
-formSubmit.addEventListener('submit', onFormSubmit);
-function onFormSubmit(event) {
+formSubmit.addEventListener('submit', searchImages);
+function searchImages(event) {
   event.preventDefault();
 
   page = 1;
@@ -45,15 +50,13 @@ function onFormSubmit(event) {
   request = input.value;
   gallery.innerHTML = '';
 
-  console.log(fetchImages(input.value));
-
-  fetchImages(input.value)
+  fetchImages(input.value, page, imagesPerPage)
     .then(photos => {
       // console.log(photos.total);
       totalImages = photos.totalHits;
       // gallery.addEventListener('wheel', mouseWheelHandler);
       Notiflix.Notify.success(`Hooray! We found ${photos.totalHits} images.`);
-      renderGallery(photos);
+      renderGallery(photos, gallery);
       searchBtn.blur();
       loadMore.blur();
       loadMore.classList.remove('is-hidden', 'is-disabled');
@@ -62,10 +65,10 @@ function onFormSubmit(event) {
       slideShow.refresh();
     })
     .catch(() => {
-      gallery.innerHTML = '';
       loadMore.classList.add('is-hidden');
       bottom.classList.add('is-hidden');
       searchBtn.blur();
+      gallery.innerHTML = '';
       Notiflix.Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
@@ -76,14 +79,13 @@ loadMore.addEventListener('click', LoadMoreImages);
 function LoadMoreImages() {
   page += 1;
   loadedImages += imagesPerPage;
-  console.log(loadedImages);
 
-  fetchImages(request)
+  fetchImages(request, page, imagesPerPage)
     .then(photos => {
       if (loadedImages >= photos.totalHits) {
         throw new Error();
       }
-      renderGallery(photos);
+      renderGallery(photos, gallery);
       slideShow.refresh();
     })
     .catch(() => {
@@ -96,18 +98,16 @@ function LoadMoreImages() {
     });
 }
 
-const fetchImages = async request => {
-  const response = await fetch(
-    `https://pixabay.com/api/?key=29601825-65f79e377599d679ceb963779&q=${request}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=${imagesPerPage}`
-  );
-  console.log(response);
-  const images = await response.json();
-  console.log(images);
-  if (images.totalHits === 0) {
-    throw new Error();
-  }
-  return images;
-};
+// const fetchImages = async request => {
+//   const response = await fetch(
+//     `https://pixabay.com/api/?key=29601825-65f79e377599d679ceb963779&q=${request}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=${imagesPerPage}`
+//   );
+//   const images = await response.json();
+//   if (images.totalHits === 0) {
+//     throw new Error();
+//   }
+//   return images;
+// };
 // async function fetchImages(request) {
 //   return fetch(
 //     `https://pixabay.com/api/?key=29601825-65f79e377599d679ceb963779&q=${request}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=${imagesPerPage}`
@@ -123,57 +123,57 @@ const fetchImages = async request => {
 //     });
 // }
 
-function renderGallery(photos) {
-  //   console.log(photos);
-  let markUp = '';
-  let size = '';
+// function renderGallery(photos) {
+//   //   console.log(photos);
+//   let markUp = '';
+//   let size = '';
 
-  photos.hits.forEach(photo => {
-    if (photo.webformatHeight <= (photo.webformatWidth / 3) * 2) {
-      size = 'height';
-    } else {
-      size = 'width';
-    }
+//   photos.hits.forEach(photo => {
+//     if (photo.webformatHeight <= (photo.webformatWidth / 3) * 2) {
+//       size = 'height';
+//     } else {
+//       size = 'width';
+//     }
 
-    markUp += `<a href="${photo.largeImageURL}">
-      <div class="photo-card">
-        <div class="photo-thumb">
-            <img src="${photo.webformatURL}" alt="${photo.tags}" loading="lazy" style="${size}:100%"/>
-        </div>
-        <div class="info">
-            <p class="info-item">
-                <b>Likes</b>${photo.likes}
-            </p>
-            <p class="info-item">
-                <b>Views</b>${photo.views}
-            </p>
-            <p class="info-item">
-                <b>Comments</b>${photo.comments}
-            </p>
-            <p class="info-item">
-                <b>Downloads</b>${photo.downloads}
-            </p>
-        </div>
-      </div>
-      </a>`;
-  });
+//     markUp += `<a href="${photo.largeImageURL}">
+//       <div class="photo-card">
+//         <div class="photo-thumb">
+//             <img src="${photo.webformatURL}" alt="${photo.tags}" loading="lazy" style="${size}:100%"/>
+//         </div>
+//         <div class="info">
+//             <p class="info-item">
+//                 <b>Likes</b>${photo.likes}
+//             </p>
+//             <p class="info-item">
+//                 <b>Views</b>${photo.views}
+//             </p>
+//             <p class="info-item">
+//                 <b>Comments</b>${photo.comments}
+//             </p>
+//             <p class="info-item">
+//                 <b>Downloads</b>${photo.downloads}
+//             </p>
+//         </div>
+//       </div>
+//       </a>`;
+//   });
 
-  gallery.insertAdjacentHTML('beforeend', markUp);
-}
+//   gallery.insertAdjacentHTML('beforeend', markUp);
+// }
 
-function galleryAutoScroll() {
-  //   console.log(
-  //     document.querySelector('.gallery').firstElementChild.getBoundingClientRect()
-  //       .height
-  //   );
-  const galleryItemHeight = document
-    .querySelector('.gallery')
-    .firstElementChild.getBoundingClientRect().height;
+// function galleryAutoScroll() {
+//   //   console.log(
+//   //     document.querySelector('.gallery').firstElementChild.getBoundingClientRect()
+//   //       .height
+//   //   );
+//   const galleryItemHeight = document
+//     .querySelector('.gallery')
+//     .firstElementChild.getBoundingClientRect().height;
 
-  window.scrollBy({
-    top: galleryItemHeight * 3,
-    // top: 2000,
-    behavior: 'smooth',
-    // behavior: 'auto',
-  });
-}
+//   window.scrollBy({
+//     top: galleryItemHeight * 3,
+//     // top: 2000,
+//     behavior: 'smooth',
+//     // behavior: 'auto',
+//   });
+// }
