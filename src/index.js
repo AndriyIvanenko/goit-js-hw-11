@@ -48,12 +48,12 @@ function searchImages(event) {
   page = 1;
   loadedImages = imagesPerPage;
   request = input.value;
-  gallery.innerHTML = '';
 
   fetchImages(input.value, page, imagesPerPage)
     .then(photos => {
       // console.log(photos.total);
       totalImages = photos.totalHits;
+      gallery.innerHTML = '';
       // gallery.addEventListener('wheel', mouseWheelHandler);
       Notiflix.Notify.success(`Hooray! We found ${photos.totalHits} images.`);
       renderGallery(photos, gallery);
